@@ -315,8 +315,7 @@ try:
                 fig5.update_layout(xaxis_title=chosen_date1,
                                    yaxis_title="Data",
                                    colorway=["#7ee3c9", "#70B0E0"],
-                                   title=f"Autocorrelation: {round(corr_user[0], 2)}
-                                         f | p-value: {round(corr_user[1], 3}")
+                                   title=f"Autocorrelation: {round(corr_user[0], 2)} | p-value: {round(corr_user[1], 3}")
 
                 st.plotly_chart(fig5,
                                 use_container_width=True)
@@ -335,8 +334,7 @@ try:
                 fig5.update_layout(xaxis_title=chosen_date1,
                                    yaxis_title="Data",
                                    colorway=["#7ee3c9", "#70B0E0"],
-                                   title=f"Data Correlation: {round(corr_user[0], 2)}
-                                         f | p-value: {round(corr_user[1], 3}")
+                                   title=f"Data Correlation: {round(corr_user[0], 2)} | p-value: {round(corr_user[1], 3}")
 
                 st.plotly_chart(fig5,
                                 use_container_width=True)
