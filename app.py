@@ -283,38 +283,63 @@ try:
         st.write("")
 
         # Cross correlation plots
+        if stationarity_data1:
+            # If data is stationary, compute the correlation coefficient directly
+            corr_user = pearsonr(data_df1_series[chosen_target1].fillna(0),
+                                 data_df1_series[feat].shift(periods=-1*lag_user).fillna(0))
+        else:
+            # Stationarize time series then calculate correlation
+            residual_target = seasonal_decompose(data_df1_series[chosen_target1]).resid
+            residual_feature = seasonal_decompose(data_df1_series[feat]).resid
+            corr_user = pearsonr(residual_target.fillna(0),
+                                 residual_feature.shift(periods=-1*lag_user).fillna(0))
+            
+        # Cross correlation plots
         for feat in data_df1_series.columns:
             lag_user = st.number_input(f"Cross correlation lag/shift for {feat}",
                                        step=1,
                                        key=feat)
+            
+            if feat == chosen_target1:
+                # Manual mode for cross correlation and choosing lag/shift
+                fig5 = go.Figure()
+                fig5.add_trace(go.Line(name=chosen_target1,
+                                       x=data_df1_series.index,
+                                       y=data_df1_series[chosen_target1]))
+                fig5.add_trace(go.Line(name=f"Shifted {feat}",
+                                       x=data_df1_series.index,
+                                       y=data_df1_series[feat].shift(periods=-1*lag_user)))
+                fig5.update_xaxes(gridcolor='grey')
+                fig5.update_yaxes(gridcolor='grey')
+                corr_user = data_df1_series[chosen_target1].corr(data_df1_series[feat].shift(periods=-1*lag_user))
+                fig5.update_layout(xaxis_title=chosen_date1,
+                                   yaxis_title="Data",
+                                   colorway=["#7ee3c9", "#70B0E0"],
+                                   title=f"Autocorrelation: {round(corr_user[0], 2)}
+                                         f | p-value: {round(corr_user[1], 3")
 
-            # Manual mode for cross correlation and choosing lag/shift
-            fig5 = go.Figure()
-            fig5.add_trace(go.Line(name=chosen_target1,
-                                   x=data_df1_series.index,
-                                   y=data_df1_series[chosen_target1]))
-            fig5.add_trace(go.Line(name=f"Shifted {feat}",
-                                   x=data_df1_series.index,
-                                   y=data_df1_series[feat].shift(periods=-1*lag_user)))
-
-            if stationarity_data1:
-                # If data is stationary, compute the correlation coefficient directly
-                corr_user = pearsonr(data_df1_series[chosen_target1].fillna(0),
-                                     data_df1_series[feat].shift(periods=-1*lag_user).fillna(0))
+                st.plotly_chart(fig5,
+                                use_container_width=True)
+                
             else:
-                # Stationarize time series then calculate correlation
-                residual_target = seasonal_decompose(data_df1_series[chosen_target1]).resid
-                residual_feature = seasonal_decompose(data_df1_series[feat]).resid
-                corr_user = pearsonr(residual_target.fillna(0),
-                                     residual_feature.shift(periods=-1*lag_user).fillna(0))
+                fig5 = go.Figure()
+                fig5.add_trace(go.Line(name=chosen_target1,
+                                       x=data_df1_series.index,
+                                       y=data_df1_series[chosen_target1]))
+                fig5.add_trace(go.Line(name=f"Shifted {feat}",
+                                       x=data_df1_series.index,
+                                       y=data_df1_series[feat].shift(periods=-1*lag_user)))
+                fig5.update_xaxes(gridcolor='grey')
+                fig5.update_yaxes(gridcolor='grey')
+                corr_user = data_df1_series[chosen_target1].corr(data_df1_series[feat].shift(periods=-1*lag_user))
+                fig5.update_layout(xaxis_title=chosen_date1,
+                                   yaxis_title="Data",
+                                   colorway=["#7ee3c9", "#70B0E0"],
+                                   title=f"Data Correlation: {round(corr_user[0], 2)}
+                                         f | p-value: {round(corr_user[1], 3")
 
-            fig5.update_layout(xaxis_title=chosen_date1,
-                               yaxis_title="Data",
-                               title=f"Data Correlation: {round(corr_user[0], 2)}"
-                                     f" | p-value: {round(corr_user[1], 3)}")
-
-            st.plotly_chart(fig5,
-                            use_container_width=True)
+                st.plotly_chart(fig5,
+                                use_container_width=True)
 
     with forecast_tab:
         # Create autoML model for forecasting
