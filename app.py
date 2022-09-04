@@ -1,5 +1,6 @@
 import time
 import pandas as pd
+import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
 from PIL import Image
@@ -21,7 +22,7 @@ start = time.time()
 st.set_page_config(layout="wide")
 
 # Display FLNT logo
-image = Image.open(r"flnt logo.png")
+image = Image.open(r"C:\Users\jrsal\Pictures\flnt logo.png")
 st.sidebar.image(image,
                  width=160)
 
@@ -110,6 +111,12 @@ try:
 
     # Test for stationarity of time series data
     def test_stationarity(timeseries):
+        """
+        Performs Augmented Dickey-Fuller test to check stationarity of input time series data
+
+        :param timeseries: time series data to test for stationarity
+        :return: boolean True(stationary) or False(non-stationary)
+        """
         # perform Dickey-Fuller test
         dftest = adfuller(timeseries,
                           autolag='AIC')
@@ -124,6 +131,7 @@ try:
     # Decompose time series data to get components (trend, seasonal, residual)
     def decompose(df, target_col):
         """
+        Performs seasonal decomposition to extract trend, seasonal component, and residual from time series data
 
         :param df: input time series dataframe
         :param target_col: target column of dataframe
@@ -161,7 +169,6 @@ try:
     residual_filled = residual.fillna(residual.mean())
 
     with stat_tab:
-
         st.header("Descriptive Statistics")
         st.write("---")
 
@@ -212,68 +219,63 @@ try:
     with plot_tab:
         st.subheader(f"Plots for {data1.name}")
 
-        # Data 1 plot
-        fig1 = go.Figure()
-        fig1.add_trace(go.Line(name=data1.name,
-                               x=data_df1_series.index,
-                               y=data_df1_series[chosen_target1]))
-        fig1.update_xaxes(gridcolor='grey')
-        fig1.update_yaxes(gridcolor='grey')
-        fig1.update_layout(colorway=["#7ee3c9"],
-                           xaxis_title=chosen_date1,
-                           yaxis_title=chosen_target1,
-                           title=f"{chosen_date1} vs. {chosen_target1}")
+        def make_plot(
+                name: str,
+                x_data: pd.Series or np.array,
+                y_data: pd.Series or np.array,
+                x_title: str,
+                y_title: str):
+            """
+            Create plotly graph object plots from given parameters
 
-        st.plotly_chart(fig1,
-                        use_container_width=True)
+            :param name: name data to be shown
+            :param x_data: pandas series or numpy array for horizontal (x-axis)
+            :param y_data: pandas series or numpy array for vertical (y-axis)
+            :param x_title: x-axis title
+            :param y_title: y-axis title
+            :return: plotly graph object plot
+            """
+            fig = go.Figure()
+            fig.add_trace(go.Line(name=name,
+                                  x=x_data,
+                                  y=y_data))
+            fig.update_xaxes(gridcolor='grey')
+            fig.update_yaxes(gridcolor='grey')
+            fig.update_layout(colorway=["#7EE3C9"],
+                              xaxis_title=x_title,
+                              yaxis_title=y_title,
+                              title=f"{name} Plot")
+
+            st.plotly_chart(fig,
+                            use_container_width=True)
+
+        # Data 1 plot
+        make_plot(data1.name,
+                  data_df1_series.index,
+                  data_df1_series[chosen_target1],
+                  chosen_date1,
+                  chosen_target1)
 
         # Seasonal plot
-        fig2 = go.Figure()
-        fig2.add_trace(go.Line(name="Seasonal",
-                               x=seasonal.index,
-                               y=seasonal))
-
-        fig2.update_xaxes(gridcolor='grey')
-        fig2.update_yaxes(gridcolor='grey')
-        fig2.update_layout(colorway=["#7ee3c9"],
-                           xaxis_title=seasonal.index.name,
-                           yaxis_title=seasonal.name,
-                           title=f"Seasonal Component of {data1.name}")
-
-        st.plotly_chart(fig2,
-                        use_container_width=True)
+        make_plot("Seasonal",
+                  seasonal.index,
+                  seasonal,
+                  seasonal.index.name,
+                  seasonal.name)
 
         # Trend plot
-        fig3 = go.Figure()
-        fig3.add_trace(go.Line(name="Trend",
-                               x=trend.index,
-                               y=trend))
-
-        fig3.update_xaxes(gridcolor='grey')
-        fig3.update_yaxes(gridcolor='grey')
-        fig3.update_layout(colorway=["#7ee3c9"],
-                           xaxis_title=trend.index.name,
-                           yaxis_title=trend.name,
-                           title=f"Trend Component of {data1.name}")
-
-        st.plotly_chart(fig3,
-                        use_container_width=True)
+        make_plot("Trend",
+                  trend.index,
+                  trend,
+                  trend.index.name,
+                  trend.name)
 
         # Residual plot
-        fig4 = go.Figure()
-        fig4.add_trace(go.Line(name="Residual",
-                               x=residual.index,
-                               y=residual))
-
-        fig4.update_xaxes(gridcolor='grey')
-        fig4.update_yaxes(gridcolor='grey')
-        fig4.update_layout(colorway=["#7ee3c9"],
-                           xaxis_title=residual.index.name,
-                           yaxis_title=residual.name,
-                           title=f"Residual Component of {data1.name}")
-
-        st.plotly_chart(fig4,
-                        use_container_width=True)
+        make_plot("Residual",
+                  residual.index,
+                  residual,
+                  residual.index.name,
+                  residual.name)
 
         st.subheader("Cross Correlation Plots")
         st.write("NOTE: The correlation values shown are based on the residuals (stationary version "
@@ -283,61 +285,73 @@ try:
         st.write("")
 
         # Cross correlation plots
-        if stationarity_data1:
-            # If data is stationary, compute the correlation coefficient directly
-            corr_user = pearsonr(data_df1_series[chosen_target1].fillna(0),
-                                 data_df1_series[feat].shift(periods=-1*lag_user).fillna(0))
-        else:
-            # Stationarize time series then calculate correlation
-            residual_target = seasonal_decompose(data_df1_series[chosen_target1]).resid
-            residual_feature = seasonal_decompose(data_df1_series[feat]).resid
-            corr_user = pearsonr(residual_target.fillna(0),
-                                 residual_feature.shift(periods=-1*lag_user).fillna(0))
-            
-        # Cross correlation plots
         for feat in data_df1_series.columns:
             lag_user = st.number_input(f"Cross correlation lag/shift for {feat}",
                                        step=1,
                                        key=feat)
-            
+
+            def make_correlation_plot(
+                    df: pd.DataFrame,
+                    target: str,
+                    feature: str,
+                    period: int,
+                    date: str,
+                    name: str):
+                """
+                Creates cross correlation and autocorrelation plots for time series data with corresponding lags
+
+                :param df: input data in dataframe
+                :param target: target name
+                :param feature: feature name
+                :param period: lag/shift to use
+                :param date: chosen date column
+                :param name: for title of plot
+                :return: cross correlation and autocorrelation plot depending on the feature name
+                """
+                fig = go.Figure()
+                fig.add_trace(go.Line(name=target,
+                                      x=df.index,
+                                      y=df[target]))
+                fig.add_trace(go.Line(name=f"Shifted {feature}",
+                                      x=df.index,
+                                      y=df[feature].shift(periods=-1*period)))
+
+                if stationarity_data1:
+                    # If data is stationary, compute the correlation coefficient directly
+                    corr_user = pearsonr(df[target].fillna(0),
+                                         df[feature].shift(periods=-1*period).fillna(0))
+                else:
+                    # Stationarize time series then calculate correlation
+                    residual_target = seasonal_decompose(df[target]).resid
+                    residual_feature = seasonal_decompose(df[feature]).resid
+                    corr_user = pearsonr(residual_target.fillna(0),
+                                         residual_feature.shift(periods=-1*period).fillna(0))
+
+                fig.update_layout(xaxis_title=date,
+                                  yaxis_title="Data",
+                                  colorway=["#7EE3C9", "#70B0E0"],
+                                  title=f"{name}: {round(corr_user[0], 2)} | p-value: {round(corr_user[1], 3)}")
+
+                st.plotly_chart(fig,
+                                use_container_width=True)
+
             if feat == chosen_target1:
-                # Manual mode for cross correlation and choosing lag/shift
-                fig5 = go.Figure()
-                fig5.add_trace(go.Line(name=chosen_target1,
-                                       x=data_df1_series.index,
-                                       y=data_df1_series[chosen_target1]))
-                fig5.add_trace(go.Line(name=f"Shifted {feat}",
-                                       x=data_df1_series.index,
-                                       y=data_df1_series[feat].shift(periods=-1*lag_user)))
-                fig5.update_xaxes(gridcolor='grey')
-                fig5.update_yaxes(gridcolor='grey')
-                corr_user = data_df1_series[chosen_target1].corr(data_df1_series[feat].shift(periods=-1*lag_user))
-                fig5.update_layout(xaxis_title=chosen_date1,
-                                   yaxis_title="Data",
-                                   colorway=["#7ee3c9", "#70B0E0"],
-                                   title=f"Autocorrelation: {round(corr_user[0], 2)} | p-value: {round(corr_user[1], 3)}")
+                name = "Autocorrelation"
+                make_correlation_plot(data_df1_series,
+                                      chosen_target1,
+                                      feat,
+                                      lag_user,
+                                      chosen_date1,
+                                      name)
 
-                st.plotly_chart(fig5,
-                                use_container_width=True)
-                
             else:
-                fig5 = go.Figure()
-                fig5.add_trace(go.Line(name=chosen_target1,
-                                       x=data_df1_series.index,
-                                       y=data_df1_series[chosen_target1]))
-                fig5.add_trace(go.Line(name=f"Shifted {feat}",
-                                       x=data_df1_series.index,
-                                       y=data_df1_series[feat].shift(periods=-1*lag_user)))
-                fig5.update_xaxes(gridcolor='grey')
-                fig5.update_yaxes(gridcolor='grey')
-                corr_user = data_df1_series[chosen_target1].corr(data_df1_series[feat].shift(periods=-1*lag_user))
-                fig5.update_layout(xaxis_title=chosen_date1,
-                                   yaxis_title="Data",
-                                   colorway=["#7ee3c9", "#70B0E0"],
-                                   title=f"Data Correlation: {round(corr_user[0], 2)} | p-value: {round(corr_user[1], 3)}")
-
-                st.plotly_chart(fig5,
-                                use_container_width=True)
+                name = "Data Correlation"
+                make_correlation_plot(data_df1_series,
+                                      chosen_target1,
+                                      feat,
+                                      lag_user,
+                                      chosen_date1,
+                                      name)
 
     with forecast_tab:
         # Create autoML model for forecasting
@@ -414,7 +428,7 @@ try:
                                yaxis_title=chosen_target1,
                                title=f"{data1.name} Forecast using {model_name1}",
                                hovermode="x",
-                               colorway=["#7ee3c9"])
+                               colorway=["#7EE3C9"])
 
             st.plotly_chart(fig5,
                             use_container_width=True)
@@ -433,7 +447,7 @@ try:
         st.write("---")
 
         # Phillips-Ouliaris Test for cointegration
-        if stationarity_data1 == False:
+        if not stationarity_data1:
             po_test = phillips_ouliaris(data_df1_series[chosen_target1],
                                         data_df1_series[data_df1_series.columns])
         if po_test.pvalue < 0.05:
@@ -445,22 +459,9 @@ try:
                      f" Thus, they have a significant relationship or correlation"
                      f" which will be useful for forecasting.")
 
-        #feature_lag = st.sidebar.number_input("Max lag for dependent variable to test for variable importance",
-        #                                      step=1,
-        #                                      value=5)
-
-        #series = data_df1_series[chosen_target1]
-        #differenced = series.diff(feature_lag)
-        #differenced = differenced[feature_lag:]
-        #series = differenced.copy()
-
-        #dataframe_lag = pd.DataFrame()
-        #for i in range(feature_lag, 0, -1):
-        #    dataframe_lag['t' + str(i)] = series.shift(i).values[:, 0]
-        #st.write(series.shift(5).values[:, 0])
-        #dataframe_lag['t'] = series.values[:, 0]
-        #dataframe_lag = dataframe_lag[feature_lag+1:]
-        #st.dataframe(dataframe_lag)
+        feature_lag = st.sidebar.number_input("Max lag for dependent variable to test for variable importance",
+                                              step=1,
+                                              value=5)
 
 except (NameError, IndexError, KeyError) as e:
     pass
