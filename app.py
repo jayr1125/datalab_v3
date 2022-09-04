@@ -11,8 +11,6 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import grangercausalitytests
 from arch.unitroot.cointegration import phillips_ouliaris
 from scipy.stats import pearsonr
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.feature_selection import RFE
 from pycaret.time_series import *
 
 # Start of execution time calculation
@@ -192,7 +190,7 @@ try:
                   help=help_stationary)
         help_white_noise = "The past values of the predictors cannot be used " \
                            "to predict the future values if white noise is present." \
-                           "In other words, the time series uploaded is a random walk."
+                           " In other words, the time series uploaded is a random walk."
         st.metric("White Noise",
                   white_noise,
                   help=help_white_noise)
@@ -458,10 +456,6 @@ try:
                      f" cointegration with {chosen_target1}."
                      f" Thus, they have a significant relationship or correlation"
                      f" which will be useful for forecasting.")
-
-        feature_lag = st.sidebar.number_input("Max lag for dependent variable to test for variable importance",
-                                              step=1,
-                                              value=5)
 
 except (NameError, IndexError, KeyError) as e:
     pass
