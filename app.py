@@ -349,6 +349,59 @@ try:
                                       lag_user,
                                       chosen_date1,
                                       name)
+                
+        st.subheader("Change Point Plot")
+
+        # Change point plot
+        def change_point_plot(
+                data: pd.Series or np.array,
+                target: str,
+                algorithm: str = "Pelt"):
+            """
+            Creates a plot of the input data with predicted change points based on the chosen algorithm
+            :param data: a pandas series or numpy array
+            :param target: target column
+            :param algorithm: algorithm to detect change points,
+            default="Pelt", options: "Pelt, "Binseg", "Window", "Dynp"
+            :return: change point plot with break points
+            """
+            models_dict = {"Pelt": [rpt.Pelt, "rbf"],
+                           "Binseg": [rpt.Binseg, "l2"],
+                           "Window": [rpt.Window, "l2"]}
+
+            model = models_dict[algorithm][1]
+
+            if algorithm == "Pelt":
+                algo = models_dict[algorithm][0](model=model).fit(data)
+                my_bkps = algo.predict(pen=10)
+            elif algorithm == "Window":
+                algo = models_dict[algorithm][0](width=40, model=model).fit(data)
+                my_bkps = algo.predict(n_bkps=10)
+            else:
+                algo = models_dict[algorithm][0](model=model).fit(data)
+                my_bkps = algo.predict(n_bkps=10)
+
+            fig = go.Figure()
+            fig.add_trace(go.Line(name="Data",
+                                  x=data.index,
+                                  y=data[target]))
+            for i in my_bkps[0:-1]:
+                fig.add_vline(x=data.iloc[i].name, line_width=1, line_dash="dash", line_color="gray")
+
+            fig.update_layout(colorway=["#7EE3C9"],
+                              xaxis_title=data.index.name,
+                              yaxis_title=chosen_target1,
+                              title=f"Change Point Plot for {data1.name}")
+
+            st.plotly_chart(fig,
+                            use_container_width=True)
+
+        algorithm_option = st.sidebar.selectbox("Choose algorithm to use for change point detection",
+                                                ("Pelt", "Binseg", "Window"))
+
+        change_point_plot(data_df1_series,
+                          chosen_target1,
+                          algorithm_option)
 
     with forecast_tab:
         # Create autoML model for forecasting
