@@ -149,7 +149,6 @@ try:
               verbose=False)
 
     seasonality = s.seasonality_present
-    primary_seasonality = s.primary_sp_to_use
     all_seasonality = s.all_sp_values
     white_noise = s.white_noise
 
@@ -433,10 +432,6 @@ try:
 
     with prescriptive_tab:
         # Summarize results and give recommendations
-        st.write(f"The recommended seasonality to use is {primary_seasonality}")
-
-        st.write("---")
-
         if len(granger_features) > 1:
             st.write(f"These variables {set(granger_features)} (at a certain lag) are useful"
                      f" for predicting the future values of {chosen_target1}."
