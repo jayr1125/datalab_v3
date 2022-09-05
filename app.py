@@ -356,7 +356,6 @@ try:
         st.subheader("Change Point Plot")
 
         # Change point plot
-        @st.cache(allow_output_mutation=True, suppress_st_warning=True)
         def change_point_plot(
                 data: pd.Series or np.array,
                 target: str,
