@@ -328,8 +328,8 @@ try:
                     corr_user = pearsonr(differenced_target.fillna(0),
                                          differenced_feature.shift(periods=-1*period).fillna(0))
                     
-                fig.update_xaxes(gridcolor="#182534")
-                fig.update_yaxes(gridcolor="#182534")
+                fig.update_xaxes(gridcolor="grey")
+                fig.update_yaxes(gridcolor="grey")
                 fig.update_layout(xaxis_title=date,
                                   yaxis_title="Data",
                                   colorway=["#7EE3C9", "#70B0E0"],
@@ -402,8 +402,10 @@ try:
                                   x=data.index,
                                   y=data[target]))
             for i in my_bkps[0:-1]:
-                fig.add_vline(x=data.iloc[i].name, line_width=1, line_dash="dash", line_color="gray")
-
+                fig.add_vline(x=data.iloc[i].name, line_width=1, line_dash="dash", line_color="grey")
+                
+            fig.update_xaxes(gridcolor="#182534")
+            fig.update_yaxes(gridcolor="#182534")
             fig.update_layout(colorway=["#7EE3C9"],
                               xaxis_title=data.index.name,
                               yaxis_title=chosen_target1,
