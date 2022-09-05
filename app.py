@@ -276,10 +276,9 @@ try:
                   residual.name)
 
         st.subheader("Cross Correlation Plots")
-        st.write("NOTE: The correlation values shown are based on the residuals (stationary version "
-                 "of the time series data)."
-                 " If the p-value is greater than 0.05, then the correlation value is purely by chance and"
-                 " statistically insignificant.")
+        st.write("NOTE: The correlation values shown are based on the stationary version of the time series data."
+                 " If the p-value is greater than 0.05, then the correlation value is statistically insignificant.")
+
         st.write("")
 
         # Cross correlation plots
@@ -294,6 +293,7 @@ try:
                     feature: str,
                     period: int,
                     date: str,
+                    data_name: str,
                     name: str):
                 """
                 Creates cross correlation and autocorrelation plots for time series data with corresponding lags
@@ -303,6 +303,7 @@ try:
                 :param feature: feature name
                 :param period: lag/shift to use
                 :param date: chosen date column
+                :param data_name: data name to be displayed in plot
                 :param name: for title of plot
                 :return: cross correlation and autocorrelation plot depending on the feature name
                 """
@@ -310,7 +311,7 @@ try:
                 fig.add_trace(go.Line(name=target,
                                       x=df.index,
                                       y=df[target]))
-                fig.add_trace(go.Line(name=f"Shifted {feature}",
+                fig.add_trace(go.Line(name=data_name,
                                       x=df.index,
                                       y=df[feature].shift(periods=-1*period)))
 
@@ -320,11 +321,13 @@ try:
                                          df[feature].shift(periods=-1*period).fillna(0))
                 else:
                     # Stationarize time series then calculate correlation
-                    residual_target = seasonal_decompose(df[target]).resid
-                    residual_feature = seasonal_decompose(df[feature]).resid
-                    corr_user = pearsonr(residual_target.fillna(0),
-                                         residual_feature.shift(periods=-1*period).fillna(0))
-                    
+                    differenced_target = df[target].diff(12)
+                    differenced_target = differenced_target[12:]
+                    differenced_feature = df[feature].diff(12)
+                    differenced_feature = differenced_feature[12:]
+                    corr_user = pearsonr(differenced_target.fillna(0),
+                                         differenced_feature.shift(periods=-1*period).fillna(0))
+
                 fig.update_xaxes(gridcolor='grey')
                 fig.update_yaxes(gridcolor='grey')
                 fig.update_layout(xaxis_title=date,
@@ -335,6 +338,11 @@ try:
                 st.plotly_chart(fig,
                                 use_container_width=True)
 
+            if lag_user > 0:
+                data_name = f"Shifted {feat}"
+            else:
+                data_name = feat
+
             if feat == chosen_target1:
                 name = "Autocorrelation"
                 make_correlation_plot(data_df1_series,
@@ -342,6 +350,7 @@ try:
                                       feat,
                                       lag_user,
                                       chosen_date1,
+                                      data_name,
                                       name)
 
             else:
@@ -351,15 +360,15 @@ try:
                                       feat,
                                       lag_user,
                                       chosen_date1,
+                                      data_name,
                                       name)
 
         st.subheader("Change Point Plot")
         
         algorithm_option = st.sidebar.selectbox("Choose algorithm to use for change point detection",
-                                        ("Pelt", "Binseg", "Window"))
+                                                ("Pelt", "Binseg", "Window"))
 
         # Change point plot
-        st.cache()
         def change_point_plot(
                 data: pd.Series or np.array,
                 target: str,
@@ -393,10 +402,8 @@ try:
                                   x=data.index,
                                   y=data[target]))
             for i in my_bkps[0:-1]:
-                fig.add_vline(x=data.iloc[i].name, line_width=1, line_dash="dash", line_color="grey")
-                
-            fig.update_xaxes(gridcolor="#182534")
-            fig.update_yaxes(gridcolor="#182534")
+                fig.add_vline(x=data.iloc[i].name, line_width=1, line_dash="dash", line_color="gray")
+
             fig.update_layout(colorway=["#7EE3C9"],
                               xaxis_title=data.index.name,
                               yaxis_title=chosen_target1,
@@ -424,7 +431,7 @@ try:
                     prediction_interval=0.95,
                     ensemble=None,
                     model_list='fast',
-                    max_generations=10,
+                    max_generations=5,
                     num_validations=1,
                     no_negatives=True
                 )
@@ -509,7 +516,7 @@ try:
             st.write(f"The chosen independent variables have"
                      f" cointegration with {chosen_target1}."
                      f" Thus, they have a significant relationship or correlation"
-                     f" which will be useful for forecasting.")
+                     f" which can be useful for forecasting.")
 
 except (NameError, IndexError, KeyError) as e:
     pass
