@@ -389,8 +389,10 @@ try:
                                   x=data.index,
                                   y=data[target]))
             for i in my_bkps[0:-1]:
-                fig.add_vline(x=data.iloc[i].name, line_width=1, line_dash="dash", line_color="gray")
-
+                fig.add_vline(x=data.iloc[i].name, line_width=1, line_dash="dash", line_color="grey")
+                
+            fig.update_xaxes(gridcolor=False)
+            fig.update_yaxes(gridcolor=False)
             fig.update_layout(colorway=["#7EE3C9"],
                               xaxis_title=data.index.name,
                               yaxis_title=chosen_target1,
