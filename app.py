@@ -354,8 +354,12 @@ try:
                                       name)
 
         st.subheader("Change Point Plot")
+        
+        algorithm_option = st.sidebar.selectbox("Choose algorithm to use for change point detection",
+                                        ("Pelt", "Binseg", "Window"))
 
         # Change point plot
+        st.cache()
         def change_point_plot(
                 data: pd.Series or np.array,
                 target: str,
@@ -400,9 +404,6 @@ try:
 
             st.plotly_chart(fig,
                             use_container_width=True)
-
-        algorithm_option = st.sidebar.selectbox("Choose algorithm to use for change point detection",
-                                                ("Pelt", "Binseg", "Window"))
 
         change_point_plot(data_df1_series,
                           chosen_target1,
