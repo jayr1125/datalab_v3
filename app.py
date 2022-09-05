@@ -327,7 +327,9 @@ try:
                     differenced_feature = differenced_feature[12:]
                     corr_user = pearsonr(differenced_target.fillna(0),
                                          differenced_feature.shift(periods=-1*period).fillna(0))
-
+                    
+                fig.update_xaxes(gridcolor="#182534")
+                fig.update_yaxes(gridcolor="#182534")
                 fig.update_xaxes(gridcolor='grey')
                 fig.update_yaxes(gridcolor='grey')
                 fig.update_layout(xaxis_title=date,
