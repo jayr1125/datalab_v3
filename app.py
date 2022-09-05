@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
+import ruptures as rpt
 from PIL import Image
 from autots import AutoTS
 from autots.tools.shaping import infer_frequency
@@ -20,7 +21,7 @@ start = time.time()
 st.set_page_config(layout="wide")
 
 # Display FLNT logo
-image = Image.open(r"flnt logo.png")
+image = Image.open(r"C:\Users\jrsal\Pictures\flnt logo.png")
 st.sidebar.image(image,
                  width=160)
 
@@ -349,7 +350,7 @@ try:
                                       lag_user,
                                       chosen_date1,
                                       name)
-                
+
         st.subheader("Change Point Plot")
 
         # Change point plot
