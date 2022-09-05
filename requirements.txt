@@ -10,3 +10,4 @@ arch
 pycaret-ts-alpha
 openpyxl
 ipywidgets
+ruptures
