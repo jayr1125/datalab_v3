@@ -330,8 +330,6 @@ try:
                     
                 fig.update_xaxes(gridcolor="#182534")
                 fig.update_yaxes(gridcolor="#182534")
-                fig.update_xaxes(gridcolor='grey')
-                fig.update_yaxes(gridcolor='grey')
                 fig.update_layout(xaxis_title=date,
                                   yaxis_title="Data",
                                   colorway=["#7EE3C9", "#70B0E0"],
