@@ -324,7 +324,9 @@ try:
                     residual_feature = seasonal_decompose(df[feature]).resid
                     corr_user = pearsonr(residual_target.fillna(0),
                                          residual_feature.shift(periods=-1*period).fillna(0))
-
+                    
+                fig.update_xaxes(gridcolor='grey')
+                fig.update_yaxes(gridcolor='grey')
                 fig.update_layout(xaxis_title=date,
                                   yaxis_title="Data",
                                   colorway=["#7EE3C9", "#70B0E0"],
