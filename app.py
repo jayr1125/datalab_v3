@@ -21,7 +21,7 @@ start = time.time()
 st.set_page_config(layout="wide")
 
 # Display FLNT logo
-image = Image.open(r"C:\Users\jrsal\Pictures\flnt logo.png")
+image = Image.open(r"flnt logo.png")
 st.sidebar.image(image,
                  width=160)
 
