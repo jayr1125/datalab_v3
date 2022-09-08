@@ -544,7 +544,7 @@ try:
                 marker=dict(color="#70B0E0"),
                 line=dict(width=0),
                 mode='lines',
-                fillcolor='rgba(68, 68, 68, 0.3)',
+                fillcolor='rgba(150, 150, 150, 0.3)',
                 fill='tonexty',
                 showlegend=False
             ))
