@@ -464,7 +464,7 @@ try:
                 fig.add_vline(x=data.iloc[i].name, line_width=1, line_dash="dash", line_color="grey")
                 
             fig.update_xaxes(gridcolor="#2E3136")
-            fig.update_yaxes(gridcolor="#2E3136")
+            fig.update_yaxes(gridcolor="grey")
             fig.update_layout(colorway=["#7EE3C9"],
                               font_color="white",
                               paper_bgcolor="#2E3136",
