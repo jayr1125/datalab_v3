@@ -466,6 +466,9 @@ try:
             fig.update_xaxes(gridcolor="#182534")
             fig.update_yaxes(gridcolor="#182534")
             fig.update_layout(colorway=["#7EE3C9"],
+                              font_color="white",
+                              paper_bgcolor="#2E3136",
+                              plot_bgcolor="#2E3136",
                               xaxis_title=data.index.name,
                               yaxis_title=chosen_target1,
                               title=f"Change Point Plot for {data1.name}")
