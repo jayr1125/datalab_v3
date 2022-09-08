@@ -330,12 +330,12 @@ try:
                   residual,
                   residual.index.name,
                   residual.name)
+        
+        st.write("---")
 
         st.subheader("Cross Correlation Plots")
         st.write("NOTE: The correlation values shown are based on the stationary version of the time series data."
                  " If the p-value is greater than 0.05, then the correlation value is statistically insignificant.")
-
-        st.write("---")
 
         # Cross correlation plots
         for feat in data_df1_series.columns:
