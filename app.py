@@ -10,9 +10,11 @@ from autots.tools.shaping import infer_frequency
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import grangercausalitytests
+from statsmodels.stats.diagnostic import acorr_ljungbox
 from arch.unitroot.cointegration import phillips_ouliaris
+from darts.utils.statistics import check_seasonality
+from darts import TimeSeries
 from scipy.stats import pearsonr
-from pycaret.time_series import *
 
 # Start of execution time calculation
 start = time.time()
@@ -21,14 +23,15 @@ start = time.time()
 st.set_page_config(layout="wide")
 
 # Display FLNT logo
-image = Image.open(r"flnt logo.png")
+image = Image.open(r"flnt.png")
 st.sidebar.image(image,
-                 width=160)
+                 width=230)
 
 # Display file uploader (adding space beneath the FLNT logo)
 st.sidebar.write("")
 st.sidebar.write("")
-data1 = st.sidebar.file_uploader("",type=["csv", "xls", "xlsx"])
+data1 = st.sidebar.file_uploader("", 
+                                 type=["csv", "xls", "xlsx"])
 
 st.sidebar.write("---")
 
@@ -120,7 +123,10 @@ try:
         dftest = adfuller(timeseries,
                           autolag='AIC')
         dfoutput = pd.Series(dftest[0:4],
-                             index=['Test Statistic', 'p-value', '#Lags Used', 'Number of Observations Used'])
+                             index=['Test Statistic', 
+                                    'p-value', 
+                                    '#Lags Used', 
+                                    'Number of Observations Used'])
 
         if dfoutput['p-value'] > 0.05:
             return False
@@ -143,15 +149,62 @@ try:
     max_seasonality = st.sidebar.number_input("Max seasonality to test",
                                               step=1,
                                               value=60)
+    
+    # Ljung-Box test for white noise
+    def white_noise_test(
+            df: pd.DataFrame,
+            target: str):
+        """
+        Performs Ljung-Box test to check noise in time series data
 
-    s = setup(data_df1_series,
-              target=chosen_target1,
-              seasonal_period=[i for i in range(1, max_seasonality + 1)],
-              verbose=False)
+        :param df: pandas dataframe
+        :param target: target to check for white noise
+        :return: boolean True(White noise) or False(No White noise)
+        """
+        p_val = acorr_ljungbox(df[target]).iloc[0]['lb_pvalue']
+        if p_val > 0.05:
+            return True
+        else:
+            return False
 
-    seasonality = s.seasonality_present
-    all_seasonality = s.all_sp_values
-    white_noise = s.white_noise
+    white_noise = white_noise_test(data_df1_series,
+                                   chosen_target1)
+    
+    # Test for seasonality
+    def seasonality_test(
+            df: pd.DataFrame,
+            time_col: str,
+            value_col: str):
+        """
+        Test for seasonality using ACF
+
+        :param df: pandas dataframe
+        :param time_col: time column of dataframe
+        :param value_col: target column of dataframe to test for seasonality
+        :return: boolean True(w/ seasonality) or False(w/o seasonality) and array of seasonal periods present in data
+        """
+        df = TimeSeries.from_dataframe(data_df1,
+                                       time_col=time_col,
+                                       value_cols=value_col,
+                                       fill_missing_dates=True,
+                                       freq=None)
+
+        periods = []
+        for i in range(2, 400):
+            is_seasonal, mseas = check_seasonality(df,
+                                                   m=i,
+                                                   max_lag=400)
+            if is_seasonal:
+                periods.append(mseas)
+
+        if len(periods) > 0:
+            return True, periods
+        else:
+            return False, periods
+          
+    seasonality, all_seasonality = seasonality_test(data_df1,
+                                                chosen_date1,
+                                                chosen_target1)
 
     seasonal, trend, residual = decompose(data_df1_series, chosen_target1)
 
@@ -194,7 +247,7 @@ try:
         st.metric("White Noise",
                   white_noise,
                   help=help_white_noise)
-        st.write("Seasonalities Present: ",
+        st.metric("Seasonalities Present: ", 
                   str(all_seasonality))
 
         st.write("---")
@@ -240,6 +293,9 @@ try:
             fig.update_xaxes(gridcolor='grey')
             fig.update_yaxes(gridcolor='grey')
             fig.update_layout(colorway=["#7EE3C9"],
+                              font_color="white",
+                              paper_bgcolor="#2E3136",
+                              plot_bgcolor="#2E3136",
                               xaxis_title=x_title,
                               yaxis_title=y_title,
                               title=f"{name} Plot")
@@ -321,17 +377,20 @@ try:
                                          df[feature].shift(periods=-1*period).fillna(0))
                 else:
                     # Stationarize time series then calculate correlation
-                    differenced_target = df[target].diff(12)
-                    differenced_target = differenced_target[12:]
-                    differenced_feature = df[feature].diff(12)
-                    differenced_feature = differenced_feature[12:]
-                    corr_user = pearsonr(differenced_target.fillna(0),
-                                         differenced_feature.shift(periods=-1*period).fillna(0))
+                    differenced_target = df[target].diff(1)
+                    differenced_target = differenced_target[1:]
+                    differenced_feature = df[feature].diff(1)
+                    differenced_feature = differenced_feature[1:]
+                    corr_user = pearsonr(differenced_target.fillna(differenced_target.mean()),
+                                         differenced_feature.shift(periods=-1*period).fillna(differenced_target.mean()))
                     
                 fig.update_xaxes(gridcolor="grey")
                 fig.update_yaxes(gridcolor="grey")
                 fig.update_layout(xaxis_title=date,
                                   yaxis_title="Data",
+                                  font_color="white",
+                                  paper_bgcolor="#2E3136",
+                                  plot_bgcolor="#2E3136",
                                   colorway=["#7EE3C9", "#70B0E0"],
                                   title=f"{name}: {round(corr_user[0], 2)} | p-value: {round(corr_user[1], 3)}")
 
@@ -366,13 +425,13 @@ try:
         st.subheader("Change Point Plot")
         
         algorithm_option = st.sidebar.selectbox("Choose algorithm to use for change point detection",
-                                                ("Pelt", "Binseg", "Window"))
+                                                ("Pelt", "Binary Segmentation", "Window"))
 
         # Change point plot
         def change_point_plot(
                 data: pd.Series or np.array,
                 target: str,
-                algorithm: str = "Pelt"):
+                algorithm: str):
             """
             Creates a plot of the input data with predicted change points based on the chosen algorithm
             :param data: a pandas series or numpy array
@@ -382,7 +441,7 @@ try:
             :return: change point plot with break points
             """
             models_dict = {"Pelt": [rpt.Pelt, "rbf"],
-                           "Binseg": [rpt.Binseg, "l2"],
+                           "Binary Segmentation": [rpt.Binseg, "l2"],
                            "Window": [rpt.Window, "l2"]}
 
             model = models_dict[algorithm][1]
