@@ -553,6 +553,9 @@ try:
             fig5.update_yaxes(gridcolor='grey')
             fig5.update_layout(xaxis_title=chosen_date1,
                                yaxis_title=chosen_target1,
+                               font_color="white",
+                               paper_bgcolor="#2E3136",
+                               plot_bgcolor="#2E3136",
                                title=f"{data1.name} Forecast using {model_name1}",
                                hovermode="x",
                                colorway=["#7EE3C9"])
