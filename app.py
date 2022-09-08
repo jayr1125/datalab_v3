@@ -484,7 +484,7 @@ try:
         # Create autoML model for forecasting
         data1_slider = st.sidebar.number_input("Forecast Horizon",
                                                min_value=1,
-                                               value=5,
+                                               value=20,
                                                step=1)
         if st.button("Forecast"):
             @st.cache(allow_output_mutation=True)
