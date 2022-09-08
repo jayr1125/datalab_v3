@@ -11,3 +11,4 @@ pycaret-ts-alpha
 openpyxl
 ipywidgets
 ruptures
+darts
