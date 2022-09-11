@@ -182,7 +182,7 @@ try:
         :param value_col: target column of dataframe to test for seasonality
         :return: boolean True(w/ seasonality) or False(w/o seasonality) and array of seasonal periods present in data
         """
-        df = TimeSeries.from_dataframe(data_df1,
+        df = TimeSeries.from_dataframe(data_df1_series_dt,
                                        time_col=time_col,
                                        value_cols=value_col,
                                        fill_missing_dates=True,
