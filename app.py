@@ -15,6 +15,7 @@ from arch.unitroot.cointegration import phillips_ouliaris
 from darts.utils.statistics import check_seasonality
 from darts import TimeSeries
 from scipy.stats import pearsonr
+from sklearn.ensemble import RandomForestRegressor
 
 # Start of execution time calculation
 start = time.time()
