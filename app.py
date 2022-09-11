@@ -580,6 +580,45 @@ try:
             st.metric(f"{chosen_target1} is cointegrated with the following variable(s)",
                       str(coint_feat),
                       help="Cointegrated means that the two variables have a relationship/correlation in the long term.")
+            
+        def feature_importance_plot():
+            dat = pd.DataFrame()
+            for i in range(25, 0, -1):
+                dat['t-' + str(i)] = data_df1_series.shift(i).values[:, 0]
+
+            dat['t-'] = data_df1_series.values[:, 0]
+            dat = dat[25:]
+            array = dat.values
+            x = array[:, 0:-1]
+            y = array[:, -1]
+
+            model = RandomForestRegressor(n_estimators=500, random_state=1)
+            model.fit(x, y)
+            names = dat.columns.values[0:-1]
+
+            fig = go.Figure()
+            fig.add_trace(go.Bar(name="Feature importance",
+                                 x=names[::-1],
+                                 y=model.feature_importances_[::-1]))
+
+            fig.update_xaxes(gridcolor="#2E3136")
+            fig.update_yaxes(gridcolor="grey")
+            fig.update_layout(xaxis_title=f"Lagged {chosen_target1}",
+                              yaxis_title="Feature Importance",
+                              font_color="white",
+                              paper_bgcolor="#2E3136",
+                              plot_bgcolor="#2E3136",
+                              title=f"Feature Importance of Lagged {chosen_target1}",
+                              colorway=["#7EE3C9"])
+
+            st.plotly_chart(fig,
+                            use_container_width=True)
+
+        st.metric("Feature Importance",
+                  "",
+                  help="This measures the importance of the lagged dependent variable for forecasting. Maximum value is 1.")
+
+        feature_importance_plot()
 
 except (NameError, IndexError, KeyError) as e:
     pass
