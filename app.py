@@ -86,6 +86,9 @@ try:
 
     data_df1_series[chosen_date1] = pd.to_datetime(data_df1_series[chosen_date1],
                                                    dayfirst=True)
+    
+    # For darts time series dataframe
+    data_df1_series_dt = data_df1_series.copy()
 
     data_df1_series.set_index(data_df1_series[chosen_date1],
                               inplace=True)
@@ -144,11 +147,6 @@ try:
         """
         dec = seasonal_decompose(df[target_col])
         return dec.seasonal, dec.trend, dec.resid
-
-    # Test for stationarity, seasonalities present, and white noise
-    max_seasonality = st.sidebar.number_input("Max seasonality to test",
-                                              step=1,
-                                              value=60)
     
     # Ljung-Box test for white noise
     def white_noise_test(
@@ -170,6 +168,7 @@ try:
     white_noise = white_noise_test(data_df1_series,
                                    chosen_target1)
     
+    st.cache()
     # Test for seasonality
     def seasonality_test(
             df: pd.DataFrame,
@@ -216,9 +215,6 @@ try:
     median_data1 = round(data_stats['50%'], 2)
     std_data1 = round(data_stats['std'], 2)
 
-    # For Granger causality test
-    residual_filled = residual.fillna(residual.mean())
-
     with stat_tab:
         st.header("Descriptive Statistics")
         st.write("---")
@@ -247,25 +243,27 @@ try:
         st.metric("White Noise",
                   white_noise,
                   help=help_white_noise)
-        st.metric("Seasonalities Present: ", 
-                  str(all_seasonality))
+        if seasonality:
+            st.metric("Seasonalities Present: ", 
+                      str(all_seasonality[:11]))
 
         st.write("---")
 
         st.subheader("Granger Causality Test Results")
 
         # Granger-causality test
-        granger_features = list()
+        differenced_gc = data_df1_series[chosen_target1] - 2*data_df1_series[chosen_target1].shift(1) + data_df1_series[chosen_target1].shift(2)
+        differenced_gc = differenced_gc.fillna(differenced_gc.mean())
+        gc = dict()
         for feature in data_df1_series.columns:
+            gc_lag = list()
             for i in range(1, granger_lag+1):
-                p_val = grangercausalitytests(pd.DataFrame(zip(data_df1_series[feature], residual_filled)),
+                p_val = grangercausalitytests(pd.DataFrame(zip(data_df1_series[feature], differenced_gc)),
                                               maxlag=granger_lag,
                                               verbose=False)[i][0]['ssr_ftest'][1]
-                if p_val < 0.05:
-                    if feature != chosen_target1:
-                        granger_features.append(feature)
-                        st.write(
-                            f"Knowing the values of {feature} is useful in predicting {chosen_target1} at lag {i}: {True}")
+                if (p_val < 0.05) and (feature != chosen_target1):
+                    gc_lag.append(i)
+                    gc[feature] = gc_lag
 
     with plot_tab:
         st.subheader(f"Plots for {data1.name}")
@@ -309,13 +307,14 @@ try:
                   data_df1_series[chosen_target1],
                   chosen_date1,
                   chosen_target1)
-
-        # Seasonal plot
-        make_plot("Seasonal",
-                  seasonal.index,
-                  seasonal,
-                  seasonal.index.name,
-                  seasonal.name)
+        
+        if seasonality:
+            # Seasonal plot
+            make_plot("Seasonal",
+                      seasonal.index,
+                      seasonal,
+                      seasonal.index.name,
+                      seasonal.name)
 
         # Trend plot
         make_plot("Trend",
@@ -377,12 +376,11 @@ try:
                                          df[feature].shift(periods=-1*period).fillna(0))
                 else:
                     # Stationarize time series then calculate correlation
-                    differenced_target = df[target].diff(1)
-                    differenced_target = differenced_target[1:]
-                    differenced_feature = df[feature].diff(1)
-                    differenced_feature = differenced_feature[1:]
+                    differenced_target = df[target] - 2*df[target].shift(1) + df[target].shift(2)
+                    differenced_feature = df[feature] - 2*df[feature].shift(1) + df[feature].shift(2)
                     corr_user = pearsonr(differenced_target.fillna(differenced_target.mean()),
-                                         differenced_feature.shift(periods=-1*period).fillna(differenced_target.mean()))
+                                         differenced_feature.shift(periods=-1 * period).fillna(
+                                             differenced_target.mean()))
                     
                 fig.update_xaxes(gridcolor="grey")
                 fig.update_yaxes(gridcolor="grey")
@@ -566,26 +564,43 @@ try:
                             use_container_width=True)
 
     with prescriptive_tab:
-        # Summarize results and give recommendations
-        if len(granger_features) > 1:
-            st.write(f"These variables {set(granger_features)} (at a certain lag) are useful"
-                     f" for predicting the future values of {chosen_target1}."
-                     f" Refer to the Granger-causality test results to identify the significant lags to use.")
+        if seasonality:
+            st.metric("Seasonalities Present: ",
+                      str(all_seasonality[:11]),
+                      help="Using these values as lags for cross/auto correlation would yield a high correlation value")
 
-        st.write("---")
+        # Granger-causality test
+        differenced_gc = data_df1_series[chosen_target1] - 2*data_df1_series[chosen_target1].shift(1) + data_df1_series[chosen_target1].shift(2)
+        differenced_gc = differenced_gc.fillna(differenced_gc.mean())
+        gc = dict()
+        for feature in data_df1_series.columns:
+            gc_lag = []
+            for i in range(1, granger_lag + 1):
+                p_val = grangercausalitytests(pd.DataFrame(zip(data_df1_series[feature], differenced_gc)),
+                                              maxlag=granger_lag,
+                                              verbose=False)[i][0]['ssr_ftest'][1]
+                if (p_val < 0.05) and (feature != chosen_target1):
+                    gc_lag.append(i)
+                    gc[feature] = gc_lag
+
+        for feat_gc, lag_gc in gc.items():
+            st.metric(f"{feat_gc} is useful in forecasting the future values of {chosen_target1} at these lags",
+                      str(lag_gc))
 
         # Phillips-Ouliaris Test for cointegration
+        coint_feat = list()
         if not stationarity_data1:
-            po_test = phillips_ouliaris(data_df1_series[chosen_target1],
-                                        data_df1_series[data_df1_series.columns])
-        if po_test.pvalue < 0.05:
-            st.write(f"These variables {data_df1_series.columns} have"
-                     f" no cointegration with {chosen_target1}")
-        else:
-            st.write(f"The chosen independent variables have"
-                     f" cointegration with {chosen_target1}."
-                     f" Thus, they have a significant relationship or correlation"
-                     f" which can be useful for forecasting.")
+            for feat in data_df1_series.columns:
+                if feat != chosen_target1:
+                    po_test = phillips_ouliaris(data_df1_series[chosen_target1],
+                                                data_df1_series[feat])
+                    if po_test.pvalue > 0.05:
+                        coint_feat.append(feat)
+
+        if len(coint_feat) > 0:
+            st.metric(f"{chosen_target1} is cointegrated with the following variable(s)",
+                      str(coint_feat),
+                      help="Cointegrated means that the two variables have a relationship/correlation in the long term.")
 
 except (NameError, IndexError, KeyError) as e:
     pass
