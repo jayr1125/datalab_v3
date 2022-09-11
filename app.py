@@ -243,27 +243,6 @@ try:
         st.metric("White Noise",
                   white_noise,
                   help=help_white_noise)
-        if seasonality:
-            st.metric("Seasonalities Present: ", 
-                      str(all_seasonality[:11]))
-
-        st.write("---")
-
-        st.subheader("Granger Causality Test Results")
-
-        # Granger-causality test
-        differenced_gc = data_df1_series[chosen_target1] - 2*data_df1_series[chosen_target1].shift(1) + data_df1_series[chosen_target1].shift(2)
-        differenced_gc = differenced_gc.fillna(differenced_gc.mean())
-        gc = dict()
-        for feature in data_df1_series.columns:
-            gc_lag = list()
-            for i in range(1, granger_lag+1):
-                p_val = grangercausalitytests(pd.DataFrame(zip(data_df1_series[feature], differenced_gc)),
-                                              maxlag=granger_lag,
-                                              verbose=False)[i][0]['ssr_ftest'][1]
-                if (p_val < 0.05) and (feature != chosen_target1):
-                    gc_lag.append(i)
-                    gc[feature] = gc_lag
 
     with plot_tab:
         st.subheader(f"Plots for {data1.name}")
