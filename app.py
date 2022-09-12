@@ -360,7 +360,7 @@ try:
                     differenced_feature = df[feature] - 2*df[feature].shift(1) + df[feature].shift(2)
                     corr_user = pearsonr(differenced_target.fillna(differenced_target.mean()),
                                          differenced_feature.shift(periods=-1 * period).fillna(
-                                             differenced_target.mean()))
+                                             differenced_feature.mean()))
                     
                 fig.update_xaxes(gridcolor="grey")
                 fig.update_yaxes(gridcolor="grey")
