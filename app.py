@@ -409,7 +409,6 @@ try:
                                                 ("Pelt", "Binary Segmentation", "Window"))
 
         # Change point plot
-        @st.cache(allow_output_mutation=True)
         def change_point_plot(
                 data: pd.Series or np.array,
                 target: str,
@@ -467,8 +466,7 @@ try:
         st.write("---")
         
         st.subheader("Feature Importance Plot")
-        
-        @st.cache()    
+          
         def feature_importance_plot():
             dat = pd.DataFrame()
             for i in range(25, 0, -1):
@@ -584,7 +582,6 @@ try:
                                                value=10,
                                                step=1)
         if st.button("Forecast"):
-            @st.cache(allow_output_mutation=True)
             def modeling(slider):
                 model = AutoTS(
                     forecast_length=slider,
