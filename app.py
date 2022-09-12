@@ -407,7 +407,6 @@ try:
                                                 ("Pelt", "Binary Segmentation", "Window"))
 
         # Change point plot
-        @st.cache()
         def change_point_plot(
                 data: pd.Series or np.array,
                 target: str,
@@ -613,14 +612,16 @@ try:
                               title=f"Feature Importance of Lagged {chosen_target1}",
                               colorway=["#7EE3C9"])
 
-            st.plotly_chart(fig,
-                            use_container_width=True)
+            #st.plotly_chart(fig,
+            #                use_container_width=True)
+            return fig
 
         st.metric("Feature Importance",
                   "",
                   help="This measures the importance of the lagged dependent variable for forecasting. Maximum value is 1.")
 
-        feature_importance_plot()
+        st.plotly_chart(feature_importance_plot(),
+                        use_container_width=True)
 
 except (NameError, IndexError, KeyError) as e:
     pass
