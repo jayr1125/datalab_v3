@@ -459,7 +459,8 @@ try:
 
         st.plotly_chart(change_point_plot(data_df1_series, 
                                           chosen_target1, 
-                                          algorithm_option))
+                                          algorithm_option), 
+                        use_container_width=True)
 
     with forecast_tab:
         # Create autoML model for forecasting
