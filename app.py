@@ -407,7 +407,7 @@ try:
                                                 ("Pelt", "Binary Segmentation", "Window"))
 
         # Change point plot
-        @st.cache()
+        @st.cache(allow_output_mutation=True)
         def change_point_plot(
                 data: pd.Series or np.array,
                 target: str,
