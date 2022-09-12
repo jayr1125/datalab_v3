@@ -169,7 +169,6 @@ try:
     white_noise = white_noise_test(data_df1_series,
                                    chosen_target1)
     
-    st.cache()
     # Test for seasonality
     def seasonality_test(
             df: pd.DataFrame,
@@ -408,6 +407,7 @@ try:
                                                 ("Pelt", "Binary Segmentation", "Window"))
 
         # Change point plot
+        @st.cache()
         def change_point_plot(
                 data: pd.Series or np.array,
                 target: str,
@@ -581,7 +581,8 @@ try:
             st.metric(f"{chosen_target1} is cointegrated with the following variable(s)",
                       str(coint_feat),
                       help="Cointegrated means that the two variables have a relationship/correlation in the long term.")
-            
+        
+        @st.cache()    
         def feature_importance_plot():
             dat = pd.DataFrame()
             for i in range(25, 0, -1):
