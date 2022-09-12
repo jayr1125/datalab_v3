@@ -503,9 +503,67 @@ try:
 
         st.metric("Feature Importance",
                   "",
-                  help="This measures the importance of the lagged dependent variable for forecasting. Maximum value is 1.")
+                  help="This measures the importance of the lagged dependent variable for forecasting. Highest value is 1.")
 
         st.plotly_chart(feature_importance_plot(),
+                        use_container_width=True)
+        
+        # Outlier detection plot
+        def outlier_plot(window_size=5):
+            """
+            Creates a plot for outlier detection based on window size and confidence intervals
+            :param window_size: window size for outlier detection, smaller value makes the bands tighter, larger value
+            makes the bands smoother. Default is 5
+            :return: outlier plot
+            """
+            window_percentage = window_size
+            k = int(len(data_df1_series_dt[chosen_target1]) * (window_percentage / 2 / 100))
+            N = len(data_df1_series_dt[chosen_target1])
+            
+            get_bands = lambda data: (np.mean(data) + 3 * np.std(data), np.mean(data) - 3 * np.std(data))
+            bands = [get_bands(data_df1_series_dt[chosen_target1][range(0 if i - k < 0 else i - k, i + k if i + k < N else N)]) for i in range(0, N)]
+            upper, lower = zip(*bands)
+            
+            mask = (data_df1_series_dt[chosen_target1] > upper) | (data_df1_series_dt[chosen_target1] < lower)
+            outlier = data_df1_series_dt[mask]
+
+            fig = go.Figure()
+            fig.add_trace(go.Line(name="Data",
+                                  x=data_df1_series_dt[chosen_date1],
+                                  y=data_df1_series_dt[chosen_target1]))
+            fig.add_trace(go.Scatter(name="Outlier",
+                                     x=outlier[chosen_date1],
+                                     y=outlier[chosen_target1],
+                                     mode="markers",
+                                     marker=dict(color='red')))
+            fig.add_trace(go.Scatter(name="Upper",
+                                     x=data_df1_series_dt[chosen_date1],
+                                     y=upper,
+                                     mode='lines',
+                                     showlegend=False,
+                                     line=dict(color="#70B0E0")))
+            fig.add_trace(go.Scatter(name="Lower",
+                                     x=data_df1_series_dt[chosen_date1],
+                                     y=lower,
+                                     mode='lines',
+                                     fillcolor='rgba(150, 150, 150, 0.3)',
+                                     fill='tonexty',
+                                     showlegend=False,
+                                     line=dict(color="#70B0E0")))
+
+            fig.update_xaxes(gridcolor="grey")
+            fig.update_yaxes(gridcolor="grey")
+            fig.update_layout(xaxis_title=chosen_date1,
+                              yaxis_title=chosen_target1,
+                              font_color="white",
+                              paper_bgcolor="#2E3136",
+                              plot_bgcolor="#2E3136",
+                              title=f"Outlier Plot of {chosen_target1}",
+                              colorway=["#7EE3C9"])
+
+            return fig
+
+        st.plotly_chart(outlier_plot(10),
                         use_container_width=True)
 
     with forecast_tab:
