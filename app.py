@@ -16,6 +16,7 @@ from darts.utils.statistics import check_seasonality
 from darts import TimeSeries
 from scipy.stats import pearsonr
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble HistGradientBoostingRegressor
 
 # Start of execution time calculation
 start = time.time()
