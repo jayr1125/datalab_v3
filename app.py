@@ -508,6 +508,10 @@ try:
         st.plotly_chart(feature_importance_plot(),
                         use_container_width=True)
         
+        st.write("---")
+        
+        st.subheader("Outlier Detection")
+        
         # Outlier detection plot
         def outlier_plot(window_size=5):
             """
