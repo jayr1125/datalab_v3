@@ -583,6 +583,8 @@ try:
             st.metric(f"{chosen_target1} is cointegrated with the following variable(s)",
                       str(coint_feat),
                       help="Cointegrated means that the two variables have a relationship/correlation in the long term.")
+            
+        st.write("---")
         
         @st.cache()    
         def feature_importance_plot():
