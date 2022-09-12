@@ -512,8 +512,13 @@ try:
         
         st.subheader("Outlier Detection")
         
+        window = st.sidebar.number_input("Window Size for Outlier Detection",
+                                         step=1,
+                                         value=5,
+                                         help="A smaller value makes the bands tighter, a larger value makes the bands smoother")
+        
         # Outlier detection plot
-        def outlier_plot(window_size=5):
+        def outlier_plot(window_size):
             """
             Creates a plot for outlier detection based on window size and confidence intervals
             :param window_size: window size for outlier detection, smaller value makes the bands tighter, larger value
@@ -567,7 +572,7 @@ try:
 
             return fig
 
-        st.plotly_chart(outlier_plot(10),
+        st.plotly_chart(outlier_plot(window),
                         use_container_width=True)
 
     with forecast_tab:
