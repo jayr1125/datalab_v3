@@ -407,6 +407,7 @@ try:
                                                 ("Pelt", "Binary Segmentation", "Window"))
 
         # Change point plot
+        @st.cache()
         def change_point_plot(
                 data: pd.Series or np.array,
                 target: str,
@@ -452,12 +453,13 @@ try:
                               yaxis_title=chosen_target1,
                               title=f"Change Point Plot for {data1.name}")
 
-            st.plotly_chart(fig,
-                            use_container_width=True)
+            #st.plotly_chart(fig,
+            #                use_container_width=True)
+            return fig
 
-        change_point_plot(data_df1_series,
-                          chosen_target1,
-                          algorithm_option)
+        st.plotly_chart(change_point_plot(data_df1_series, 
+                                          chosen_target1, 
+                                          algorithm_option))
 
     with forecast_tab:
         # Create autoML model for forecasting
