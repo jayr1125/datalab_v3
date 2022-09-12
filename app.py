@@ -356,11 +356,12 @@ try:
                                          df[feature].shift(periods=-1*period).fillna(0))
                 else:
                     # Stationarize time series then calculate correlation
-                    differenced_target = df[target] - 2*df[target].shift(1) + df[target].shift(2)
-                    differenced_feature = df[feature] - 2*df[feature].shift(1) + df[feature].shift(2)
+                    #differenced_target = df[target] - 2*df[target].shift(1) + df[target].shift(2)
+                    differenced_target = df[target] - df[target].shift(1)
+                    #differenced_feature = df[feature] - 2*df[feature].shift(1) + df[feature].shift(2)
+                    differenced_feature = df[feature] - df[feature].shift(1)
                     corr_user = pearsonr(differenced_target.fillna(differenced_target.mean()),
-                                         differenced_feature.shift(periods=-1 * period).fillna(
-                                             differenced_feature.mean()))
+                                         differenced_feature.shift(periods=-1 * period).fillna(differenced_feature.mean()))
                     
                 fig.update_xaxes(gridcolor="grey")
                 fig.update_yaxes(gridcolor="grey")
